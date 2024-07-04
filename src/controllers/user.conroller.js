@@ -4,7 +4,7 @@ import { User } from "../models/user.model.js";
 import { upLoadOnCloudinary } from "../utils/cloudnary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
-import { emit } from "nodemon";
+
 
 const generateAccessTokenandRefreshToken = async (userId) => {
   const user = await User.findById(userId);
@@ -377,6 +377,62 @@ const getUserChannelProfile = asynchandler(async (req, res) => {
 })
 
 
+// get chanel vidios and watch history
+
+const getWatchHistory = asynchandler(async (req, res) => {
+  try {
+    const user = await User.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(req.user._id)
+        }
+      },
+      {
+        $lookup: {
+          from: "videos",
+          localField: "watchHistory",
+          foreignField: "_id",
+          as: "watchHistory",
+          pipeline: [
+            {
+              $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner",
+                pipeline: [
+                  {
+                    $project: {
+                      username: 1,
+                      fullName: 1,
+                      avatar: 1
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      },
+      {
+        $addFields: {
+          owner: {
+            $first: "$owner"
+          }
+        }
+      }
+    ]);
+
+    if (!user.length) {
+      return res.status(404).json(new ApiResponse(404, null, "User not found"));
+    }
+
+    return res.status(200).json(new ApiResponse(200, user[0].watchHistory, "Watch history fetched successfully"));
+  } catch (error) {
+    return res.status(500).json(new ApiResponse(500, null, "Server error"));
+  }
+});
+
 
 
 
@@ -385,4 +441,5 @@ export {
   refereshAccessToken, changeCurrentPassword,
   getCurrentUser, updateUserProfile
   , updateUserAvatar, updateUserCoverImage
+  , getUserChannelProfile, getWatchHistory
 };
