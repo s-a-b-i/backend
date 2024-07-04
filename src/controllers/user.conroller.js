@@ -85,18 +85,21 @@ const loginUser = asynchandler(async (req, res, next) => {
 
   const { username, email, password } = req.body;
 
-  if (!username || !email) {
+    if (!username && !email) {
+   {
     throw new ApiError(400, "username or email is required");
   }
+}
 
    const user =  User.findOne({
      $or: [{ username }, { email }] 
     })
 
+
     if (!user) {
         throw new ApiError(404, "User not found");
     }
-
+  
    const isPasswordValid = await user.isPasswordCorrect(password);
 
    if (!isPasswordValid) {
