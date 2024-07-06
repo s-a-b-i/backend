@@ -5,7 +5,7 @@ import { upLoadOnCloudinary } from "../utils/cloudnary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
-
+// generate access and refresh token
 const generateAccessTokenandRefreshToken = async (userId) => {
   const user = await User.findById(userId);
 
